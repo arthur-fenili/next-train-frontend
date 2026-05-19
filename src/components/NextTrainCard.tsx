@@ -35,8 +35,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function NextTrainCard({ train, line, stationName }: Props) {
-  const color = urgencyColor(train.proximo_em_segundos)
-  const destName = stationName(train.estacao_destino)
+  const color      = urgencyColor(train.proximo_em_segundos)
   const originName = stationName(train.estacao_origem_trem)
 
   return (
@@ -45,22 +44,20 @@ export function NextTrainCard({ train, line, stationName }: Props) {
       <div className="h-1 w-full" style={{ backgroundColor: line.color }} />
 
       <div className="p-5">
-        {/* Destino */}
+        {/* Sentido */}
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-white/40">Para</span>
-          <span className="text-sm font-bold text-white truncate">{destName}</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-white/40">Sentido</span>
+          <span className="text-sm font-bold text-white truncate">{train.sentido}</span>
         </div>
 
         {/* Contagem principal */}
         <div className="flex items-end justify-between mb-4">
-          <div>
-            <span
-              className="text-5xl font-black tabular-nums leading-none"
-              style={{ color }}
-            >
-              {formatCountdown(train.proximo_em_segundos)}
-            </span>
-          </div>
+          <span
+            className="text-5xl font-black tabular-nums leading-none"
+            style={{ color }}
+          >
+            {formatCountdown(train.proximo_em_segundos)}
+          </span>
 
           <div className="text-right">
             <p className="text-xs text-white/40 mb-0.5">Previsto</p>
@@ -70,7 +67,7 @@ export function NextTrainCard({ train, line, stationName }: Props) {
           </div>
         </div>
 
-        {/* Rodapé: status + posição atual */}
+        {/* Rodapé: status + posição atual do trem */}
         <div className="flex items-center justify-between pt-3 border-t border-white/8">
           <StatusBadge status={train.status} />
           {originName && (

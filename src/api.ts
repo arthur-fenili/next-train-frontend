@@ -10,6 +10,7 @@ export interface NextTrain {
   estacao_origem: string
   estacao_destino: string
   estacao_origem_trem: string
+  sentido: string
   proximo_em_segundos: number
   proximo_em_minutos: number
   hora_previsto_chegada: string
