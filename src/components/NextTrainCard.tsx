@@ -71,8 +71,8 @@ export function NextTrainCard({ train, line, stationName }: Props) {
         <div className="flex items-center justify-between pt-3 border-t border-white/8">
           <StatusBadge status={train.status} />
           {originName && (
-            <span className="text-xs text-white/30 truncate max-w-[48%] text-right">
-              Trem em {originName}
+            <span className="text-xs text-white/30 max-w-[60%] text-right">
+              Trem na região de {originName}
             </span>
           )}
         </div>
