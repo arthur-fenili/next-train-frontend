@@ -118,8 +118,8 @@ export default function App() {
           <TrainIcon />
         </div>
         <div className="flex-1 min-w-0">
-          <h1 className="text-sm font-bold text-white leading-tight">Próximo Trem</h1>
-          <p className="text-xs text-white/40 leading-tight">Via Mobilidade</p>
+          <h1 className="text-sm font-bold text-white leading-tight">Next Train - Centralizer</h1>
+          <p className="text-xs text-white/40 leading-tight">Via Mobilidade - Linhas 8 e 9</p>
         </div>
         {selectedStation && (
           <button
