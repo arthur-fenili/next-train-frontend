@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchNextTrains, fetchStations, NextTrain, Station } from './api'
+import { FavoritesBar } from './components/FavoritesBar'
 import { LineSelector } from './components/LineSelector'
 import { NextTrainCard } from './components/NextTrainCard'
 import { StationDropdown } from './components/StationDropdown'
+import { useFavorites } from './hooks/useFavorites'
 import { LINE_MAP, LineCode } from './lines'
 
 const REFRESH_INTERVAL = 30_000
@@ -32,22 +34,25 @@ function RefreshIcon({ spinning }: { spinning: boolean }) {
 }
 
 export default function App() {
-  const [selectedLine, setSelectedLine] = useState<LineCode | null>(null)
-  const [stations, setStations] = useState<Station[]>([])
+  const [selectedLine, setSelectedLine]       = useState<LineCode | null>(null)
+  const [stations, setStations]               = useState<Station[]>([])
   const [selectedStation, setSelectedStation] = useState('')
-  const [trains, setTrains] = useState<NextTrain[]>([])
+  const [trains, setTrains]                   = useState<NextTrain[]>([])
   const [loadingStations, setLoadingStations] = useState(false)
-  const [loadingTrains, setLoadingTrains] = useState(false)
-  const [refreshing, setRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [loadingTrains, setLoadingTrains]     = useState(false)
+  const [refreshing, setRefreshing]           = useState(false)
+  const [error, setError]                     = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated]         = useState<Date | null>(null)
 
-  // Mapa código → nome para resolução nos cards
-  const stationMap = Object.fromEntries(stations.map((s) => [s.code, s.name]))
+  const intervalRef      = useRef<ReturnType<typeof setInterval> | null>(null)
+  // estação a selecionar após a troca de linha via chip de favorito
+  const pendingStationRef = useRef<string | null>(null)
+
+  const { favorites, toggleFavorite, isFavorite } = useFavorites()
+
+  const stationMap  = Object.fromEntries(stations.map(s => [s.code, s.name]))
   const stationName = useCallback((code: string) => stationMap[code] ?? code, [stations])
-
-  const lineConfig = selectedLine ? LINE_MAP[selectedLine] : null
+  const lineConfig  = selectedLine ? LINE_MAP[selectedLine] : null
 
   // Busca estações ao trocar de linha
   useEffect(() => {
@@ -58,12 +63,19 @@ export default function App() {
     setError(null)
     setLoadingStations(true)
     fetchStations(selectedLine)
-      .then(setStations)
+      .then(data => {
+        setStations(data)
+        // seleciona estação pendente (vinda de chip de favorito)
+        if (pendingStationRef.current) {
+          setSelectedStation(pendingStationRef.current)
+          pendingStationRef.current = null
+        }
+      })
       .catch(() => setError('Não foi possível carregar as estações.'))
       .finally(() => setLoadingStations(false))
   }, [selectedLine])
 
-  // Busca trens (usado no efeito e no refresh manual)
+  // Busca trens
   const loadTrains = useCallback(async (isRefresh = false) => {
     if (!selectedLine || !selectedStation) return
     isRefresh ? setRefreshing(true) : setLoadingTrains(true)
@@ -80,7 +92,7 @@ export default function App() {
     }
   }, [selectedLine, selectedStation])
 
-  // Busca inicial + polling ao selecionar estação
+  // Polling ao selecionar estação
   useEffect(() => {
     if (!selectedStation) {
       setTrains([])
@@ -98,6 +110,16 @@ export default function App() {
     setTrains([])
     setLastUpdated(null)
     setError(null)
+  }
+
+  // Seleção via chip de favorito — pode exigir troca de linha
+  const handleFavoriteSelect = (linha: LineCode, stationCode: string) => {
+    if (linha !== selectedLine) {
+      pendingStationRef.current = stationCode
+      handleLineChange(linha)
+    } else {
+      setSelectedStation(stationCode)
+    }
   }
 
   return (
@@ -143,6 +165,16 @@ export default function App() {
           <LineSelector selected={selectedLine} onChange={handleLineChange} />
         </section>
 
+        {/* Favoritos — aparece entre linha e dropdown quando há pelo menos um */}
+        <FavoritesBar
+          favorites={favorites}
+          onSelect={handleFavoriteSelect}
+          onRemove={(linha, code) => {
+            const name = favorites.find(f => f.linha === linha && f.stationCode === code)?.stationName ?? code
+            toggleFavorite(linha, code, name)
+          }}
+        />
+
         {/* Seletor de estação */}
         {selectedLine && (
           <section>
@@ -152,6 +184,8 @@ export default function App() {
               line={lineConfig!}
               loading={loadingStations}
               onChange={setSelectedStation}
+              isFavorite={isFavorite}
+              onToggleFavorite={toggleFavorite}
             />
           </section>
         )}
