@@ -222,6 +222,13 @@ export default function App() {
               </div>
             )}
 
+            {!loadingTrains && !error && trains.some(t => t.estacao_operando === false) && (
+              <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-center">
+                <p className="text-amber-400 text-sm font-medium">Estação fora de operação no momento.</p>
+                <p className="text-amber-400/60 text-xs mt-1">As previsões podem não refletir o embarque nesta estação.</p>
+              </div>
+            )}
+
             {!loadingTrains && trains.map((train, i) => (
               <NextTrainCard
                 key={`${train.estacao_destino}-${i}`}

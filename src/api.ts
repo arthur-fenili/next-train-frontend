@@ -16,6 +16,7 @@ export interface NextTrain {
   hora_previsto_chegada: string
   atualizado_em: string
   status: string
+  estacao_operando?: boolean
 }
 
 export async function fetchStations(linha: string): Promise<Station[]> {
